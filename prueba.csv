@@ -1,0 +1,7 @@
+num,pregunta,op1,op2,op3,op4,correcta
+1,"En PHP y con las funciones de expresiones regulares PCRE, para realizar una sustitución en base a una expresión regular se emplea la función:",a) ereg_replace(),b) preg_match_all(),c) preg_replace(),d) replace(),1,PHP7
+2,"En PHP, ¿cómo se puede sustituir ""Amo"" por ""Odio"" en la frase ""Amo las expresiones regulares""?","a) preg_replace(""/Amo/"", ""/Odio/"", ""Amo las expresiones regulares"")","b) preg_replace(""/Odio/"", ""/Amo/"", ""Amo las expresiones regulares"")","c) preg_replace(""/Amo/"", ""Odio"", ""Amo las expresiones regulares"")","d) preg_replace(""/Odio/"", ""Amo"", ""Amo las expresiones regulares"")",2,PHP7
+3,"En PHP y con las funciones de expresiones regulares PCRE, si no se quiere tener en cuenta las mayúsculas y minúsculas, se debe emplear el modificador:",a) b,b) g,c) i,d) Las anteriores respuestas no son correctas,3,PHP7
+4,"En PHP, las funciones de expresiones regulares que están obsoletas son:",a) PCRE,b) Perl,c) POSIX,d) Las anteriores respuestas no son correctas,4,PHP7
+5,"En PHP, ¿qué problema tiene la expresión ""<?=$algo;?>""?",a) No hay ningún problema,b) Necesita que se puedan usar las etiquetas cortas y eso no es compatible con XML,c) Requiere una librería especial de PHP que no siempre está instalada,d) Esa sintaxis no existe en PHP,4,PHP7
+6,"En PHP y con las funciones de expresiones regulares POSIX, para dividir una cadena en base a una expresión regular se emplea la función:",a) divide(),b) ereg_split(),c) preg_split(),d) split(),3,PHP7
