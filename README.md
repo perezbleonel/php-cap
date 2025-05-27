@@ -1,6 +1,6 @@
 # ABC/CRUD
 
-Ejercicio PHP
+Ejercicio PHP que emula un CRUD se encuentra en la carpeta PHP CAP con el nombre PHP-ABC-CRUD
 
 ## Requisitos Previos
 
