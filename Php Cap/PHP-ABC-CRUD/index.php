@@ -19,17 +19,17 @@
         table { width: 100%; }
     </style>
     <?php
-    // Habilitar la visualización de errores (solo necesitas hacerlo una vez al principio)
+    // Habilitar la visualización de errores
     ini_set('display_errors', 1);
     ini_set('display_startup_errors', 1);
     error_reporting(E_ALL);
 
-    include "enviroment/conn.php"; // Debería mostrar "Conexion exitosa" si está configurado así en conn.php
+    include "enviroment/conn.php"; 
 
     // El arreglo $msg es para almacenar los string de los posibles errores y mensajes de éxito
     $msg = array();
-    $r = null; // Inicializar $r para evitar errores si no se ejecuta ninguna consulta que lo defina
-    $id = "";  // Inicializar $id
+    $r = null; 
+    $id = "";  
 
     /*
     //Manejo CRUD
@@ -37,7 +37,7 @@
     /C=Create
     /R=Read
     /U=Update
-    /B=Before DELETE B triggers a pop-up to confirm the DELETE.
+    /B=Before DELETE.
     /D=Delete
     /K=Download
     */
@@ -45,14 +45,15 @@
     // LÓGICA POST (CREATE/UPDATE)
     if (isset($_POST["name"])) {
         $name = $_POST["name"] ?? "";
-        // CORRECCIÓN: Asegúrate de que usas $_POST y no $POST_ ok
-        $id_post = $_POST["id"] ?? ""; // Renombrada para evitar conflicto con $id de GET
+        $id_post = $_POST["id"] ?? ""; 
 
         //CREATE
         if ($id_post == "") {
-            if (isset($_FILES['image']['tmp_name']) && $_FILES['image']['tmp_name'] != "") {
+            if(empty(trim($name)))
+            array_push($msg, "ADVERTENCIA: La imagen debe tener un nombre");
+            else if (isset($_FILES['image']['tmp_name']) && $_FILES['image']['tmp_name'] != "") {
                 $image_content = file_get_contents($_FILES['image']['tmp_name']);
-                if (!empty($image_content)) {
+                if (!empty($image_content) ) {
                     $image = addslashes($image_content);
                     $sql = "INSERT INTO images(name, image) VALUES('$name','$image')";
                     if (mysqli_query($conn, $sql)) {
@@ -60,7 +61,8 @@
                     } else {
                         array_push($msg, "ERROR: No se pudo crear - " . mysqli_error($conn));
                     }
-                } else {
+                }
+                else {
                     array_push($msg, "ERROR: La imagen seleccionada está vacía.");
                 }
             } else {
@@ -79,7 +81,7 @@
             } else {
                 $sql = "UPDATE images SET name='" . mysqli_real_escape_string($conn, $name) . "'";
                 if ($image != "") {
-                    $sql .= ", image='" . $image . "'"; // addslashes ya se aplicó
+                    $sql .= ", image='" . $image . "'"; 
                 }
                 $sql .= " WHERE id=" . intval($id_post);
                 if (mysqli_query($conn, $sql)) {
@@ -99,7 +101,7 @@
     }
     echo "";
 
-    // DELETE (Acción final de borrado)
+    // DELETE DEFINITIVO
     if ($M == "D") {
         $id = $_GET["id"] ?? "";
         if ($id != "") {
@@ -115,15 +117,15 @@
     echo "";
 
     // PREPARACIÓN DE DATOS PARA K (Download), U (Update Form), B (Before Delete View)
-    $data_item = null; // Para almacenar los datos del ítem individual
+    $data_item = null; 
     if ($M == "K" || $M == "U" || $M == "B") {
         $id = $_GET["id"] ?? ""; // $id se usa para K, U, B
         if ($id != "") {
             $sql = "SELECT * FROM images WHERE id=".intval($id);
             $result_item = mysqli_query($conn, $sql);
             if ($result_item && mysqli_num_rows($result_item) > 0) {
-                $data_item = mysqli_fetch_assoc($result_item); // Usaremos $data_item para U y B
-            } else if ($M != "K") { // No mostrar error si es K y no encuentra, podría ser diferente manejo
+                $data_item = mysqli_fetch_assoc($result_item);
+            } else if ($M != "K") { 
                  array_push($msg, "No se encontró el ítem con ID: ".htmlspecialchars($id));
             }
         } else if ($M != "K") {
@@ -133,7 +135,6 @@
         // DOWNLOAD
         if ($M == "K") {
             if ($data_item) {
-                // Sanitize name for filename
                 $file_name_safe = preg_replace('/[^A-Za-z0-9_\-\.]/', '_', $data_item["name"]);
                 $file = $file_name_safe . ".jpg";
 
@@ -145,36 +146,21 @@
                 header('Cache-Control: must-revalidate');
                 header('Pragma: public');
                 header('Content-Length: ' . strlen($data_item["image"]));
-                echo $data_item["image"]; // Output the image data
-                exit; // Terminate script after download
+                echo $data_item["image"]; 
+                exit;
             } else {
                 array_push($msg, "No se pudo descargar: Ítem no encontrado o imagen vacía.");
-                // $M = "R"; // Ir a la lista si la descarga falla por ítem no encontrado
             }
-            // No se cambia $M a "R" aquí directamente si la descarga tiene su propio flujo y termina con exit.
-            // Si la descarga falla y no hace exit, podrías querer redirigir o cambiar $M.
-            // Por ahora, si K falla y no hay exit, continuará el script, lo que podría ser no deseado.
-            // Considerar un $M = "R"; aquí si la descarga falla y no se hace exit().
         }
-        // ANTERIORMENTE: $M="R"; ESTA LÍNEA CAUSABA EL PROBLEMA. LA HEMOS ELIMINADO DE AQUÍ.
-        // Ahora M permanece como B o U si entraron así.
     }
     echo "";
 
-    //READ (Carga la lista completa si $M es "R")
+    //READ 
     if ($M == "R") {
         $sql = "SELECT * FROM images";
-        $r = mysqli_query($conn, $sql); // $r ahora es para la lista general
+        $r = mysqli_query($conn, $sql); 
         echo "";
     } else if ($M == "U" || $M == "B") {
-        // Si M es U o B, y $data_item fue cargado, $r (para la tabla) puede ser el resultado del ítem individual
-        // Para simplificar, la tabla principal siempre usará $r de la lista completa si M es R,
-        // y para M=B, mostraremos el ítem específico ANTES de la confirmación.
-        // Si M es U, se muestra el formulario.
-        // Si M es B, el $data_item ya tiene los datos del ítem a borrar.
-        // El $r para la tabla principal solo se llena si M=R.
-        // Para M=B, la tabla principal (lista) no se mostraría idealmente, solo la info del ítem a borrar.
-        // Ajustaremos la lógica de la tabla.
     }
     ?>
     <script>
@@ -188,7 +174,7 @@
                 }
             <?php } ?>
 
-            <?php if ($M == "B" && $data_item) { // Solo generar JS si M es B y tenemos datos del ítem ?>
+            <?php if ($M == "B" && $data_item) {  ?>
                 if (document.getElementById("yes")) {
                     document.getElementById("yes").onclick = function() {
                         let id = <?php echo intval($data_item['id']); ?>;
@@ -227,7 +213,7 @@
     ?>
         <form action="index.php" method="post" enctype="multipart/form-data" style="margin-bottom:20px; padding:10px; border:1px solid #666;">
             <h3><?php echo ($M == "C") ? "Subir nueva imagen" : "Modificar imagen"; ?></h3>
-            <input type="text" required name="name" placeholder="Ingrese el nombre de su imagen" 
+            <input type="text"  name="name" required placeholder="Ingrese el nombre de su imagen" 
                    value="<?php if ($M == "U" && isset($data_item['name'])) print htmlspecialchars($data_item['name']); ?>">
             <br>
             <?php if ($M == "U" && isset($data_item['image'])) {
@@ -259,16 +245,11 @@
             </div>
     <?php
         } else {
-            // El mensaje de "ítem no encontrado" ya se habrá añadido a $msg
             print "<p>Regrese a la <a href='index.php'>lista principal</a>.</p>";
         }
-    } // Fin de la vista de confirmación M=B
-
-    // TABLA DE IMÁGENES (Solo se muestra si M es "R" o si M es B y no hay ítem (para ver la lista))
-    // Idealmente, si M=B y el ítem existe, solo muestras la confirmación.
-    // Si M=R, muestras la tabla.
+    }
     echo "";
-    if ($M == "R") { // Mostrar tabla solo en modo Read
+    if ($M == "R") { 
         if ($r && mysqli_num_rows($r) > 0) {
     ?>
             <table border="1">
@@ -283,7 +264,7 @@
                 </thead>
                 <tbody>
                     <?php
-                    while ($data_row = mysqli_fetch_assoc($r)) { // Renombrado $data a $data_row para evitar conflicto
+                    while ($data_row = mysqli_fetch_assoc($r)) { 
                         print "<tr>";
                         print "<td>" . $data_row["id"] . "</td>";
                         print "<td><a href='index.php?M=K&id=" . $data_row['id'] . "'>" . htmlspecialchars($data_row["name"]) . "</a></td>";
@@ -296,10 +277,10 @@
                 </tbody>
             </table>
     <?php
-        } else if ($M == "R") { // Solo muestra "No hay imágenes" si estamos en modo R y no hay resultados
+        } else if ($M == "R") {
             print "<p>No hay imágenes para mostrar.</p>";
         }
-    } // Fin de if ($M == "R") para la tabla
+    }
     ?>
 </body>
 </html>
